@@ -1,0 +1,36 @@
+{
+  "name": "spiro3a12",
+  "version": "1.19.0",
+  "description": "Calculadora de Valores Previstos de Espirometria para Crianças de 3 a 12 anos",
+  "author": "Marcus H Jones <marcushjones@gmail.com>",
+  "main": "main-electron.js",
+  "scripts": {
+    "start": "electron .",
+    "build-mac": "electron-builder --mac",
+    "build-win": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.marcusjones.spiro3a12",
+    "mac": {
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "main-electron.js",
+      "package.json",
+      "index.html",
+      "css/**/*",
+      "js/**/*"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^39.2.3",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "chartjs-plugin-annotation": "^3.1.0"
+  }
+}
