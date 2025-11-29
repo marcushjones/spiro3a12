@@ -1,6 +1,6 @@
 {
   "name": "spiro3a12",
-  "version": "1.19.0",
+  "version": "1.20.0",
   "description": "Calculadora de Valores Previstos de Espirometria para Crianças de 3 a 12 anos",
   "author": "Marcus H Jones <marcushjones@gmail.com>",
   "main": "main-electron.js",

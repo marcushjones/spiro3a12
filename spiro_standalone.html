@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valores Previstos de Espirometria: Crianças de 3 a 12 anos (Standalone)</title>
+    <title>Valores Previstos de Espirometria: Crianças de 3 a 12 anos</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -304,18 +304,18 @@
         .action-buttons-group {
             margin-top: 40px;
             display: flex;
-            gap: 15px;
+            gap: 10px;
             justify-content: center;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
         }
 
         .action-buttons-group button {
             width: auto;
             flex-grow: 1;
-            max-width: 200px;
             margin-top: 0;
-            font-size: 1em;
-            padding: 12px 20px;
+            font-size: 0.9em;
+            padding: 10px 15px;
+            white-space: nowrap;
         }
 
         #resetButton {
@@ -680,7 +680,14 @@
 
             <p class="citation">Valores previstos: Jones et al. Jornal Brasileiro de Pneumologia, 2020</p>
 
-            <div class="chart-container">
+            <div class="input-group" style="margin-bottom: 10px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="showChartCheckbox" style="width: auto; margin: 0;">
+                    Visualizar Gráfico
+                </label>
+            </div>
+
+            <div class="chart-container" id="chartContainer">
                 <canvas id="spirometryChart"></canvas>
             </div>
 
@@ -704,58 +711,60 @@
             </div>
 
             <div class="action-buttons-group">
+                <button type="button" id="saveExamButton" class="action-button"
+                    style="background-color: #2563eb; color: white;">Salvar Exame</button>
                 <button type="button" id="exportDbButton" class="action-button"
-                    style="background-color: #4CAF50; color: white;">Exportar Banco de Dados (CSV)</button>
+                    style="background-color: #4CAF50; color: white;">Exportar CSV</button>
+                <button type="button" id="printButton" style="background-color: #0ea5e9;">Imprimir</button>
+                <button type="button" id="copyHtmlButton" style="background-color: #10b981;">Copiar</button>
+                <button type="button" id="resetButton" style="background-color: #64748b;">Novo</button>
                 <button type="button" id="sendHealthyButton" class="action-button"
-                    style="background-color: #8e44ad; color: white; display: none;">Enviar Dados (Sadios)</button>
-                <button type="button" id="printButton">Imprimir (PDF)</button>
-                <button type="button" id="copyHtmlButton">Copiar Resultados (HTML)</button>
-                <button type="button" id="resetButton">Novo Exame</button>
+                    style="background-color: #8e44ad; color: white; display: none;">Enviar Sadios</button>
             </div>
 
             <div class="author-license-info">
                 <p>Desenvolvido por <a href="mailto:marcushjones@gmail.com?subject=Feedback%20Spiro3a12">Marcus H
                         Jones</a>
                 </p>
-                <p class="license-small">Versão 1.19 | CC BY-ND 4.0</p>
+                <p class="license-small">Versão 1.20 | CC BY-ND 4.0</p>
             </div>
         </div>
     </div>
     <script>
-        // --- calculations.js content ---
+
         // Coefficients for Predicted Values (Jones et al. 2020)
-        const coefMalePrev = {
+        window.coefMalePrev = {
             intercept: { cvf: -11.358191, vef1: -10.434226, vef1cvf: 1.760961, fef2575: -6.957857, fef2575cvf: 6.185501 },
             lnAltura: { cvf: 2.419817, vef1: 2.207609, vef1cvf: -0.176748, fef2575: 1.527303, fef2575cvf: -1.044205 },
             lnIdade: { cvf: 0.115477, vef1: 0.114001, vef1cvf: 0, fef2575: 0.138649, fef2575cvf: 0 },
             cor: { cvf: -0.028745, vef1: -0.031836, vef1cvf: 0, fef2575: 0, fef2575cvf: 0.093297 }
         };
 
-        const coefFemalePrev = {
+        window.coefFemalePrev = {
             intercept: { cvf: -10.741935, vef1: -9.967774, vef1cvf: 1.437685, fef2575: -7.385469, fef2575cvf: 5.041747 },
             lnAltura: { cvf: 2.261976, vef1: 2.08895, vef1cvf: -0.106215, fef2575: 1.594033, fef2575cvf: -0.785773 },
             lnIdade: { cvf: 0.156836, vef1: 0.150386, vef1cvf: 0, fef2575: 0.203576, fef2575cvf: 0 },
             cor: { cvf: -0.041015, vef1: -0.048582, vef1cvf: 0, fef2575: 0, fef2575cvf: 0.046472 }
         };
 
-        const coefMaleLIN = {
+        window.coefMaleLIN = {
             intercept: { cvf: -9.32749, vef1: -8.960184, vef1cvf: 1.94278, fef2575: -5.356269, fef2575cvf: 4.579022 },
             lnAltura: { cvf: 1.890179, vef1: 1.820202, vef1cvf: -0.231255, fef2575: 1.085145, fef2575cvf: -0.78661 },
             lnIdade: { cvf: 0.268924, vef1: 0.208981, vef1cvf: 0, fef2575: 0.211021, fef2575cvf: 0 },
             cor: { cvf: -0.042377, vef1: -0.026383, vef1cvf: 0, fef2575: 0, fef2575cvf: 0.036968 }
         };
 
-        const coefFemaleLIN = {
+        window.coefFemaleLIN = {
             intercept: { cvf: -10.325884, vef1: -8.934018, vef1cvf: 1.313149, fef2575: -7.85519, fef2575cvf: 3.919387 },
             lnAltura: { cvf: 2.098703, vef1: 1.768038, vef1cvf: -0.100805, fef2575: 1.673427, fef2575cvf: -0.642607 },
             lnIdade: { cvf: 0.23022, vef1: 0.290733, vef1cvf: 0, fef2575: 0.056126, fef2575cvf: 0 },
             cor: { cvf: -0.073692, vef1: -0.054695, vef1cvf: 0, fef2575: 0, fef2575cvf: 0.027623 }
         };
 
-        const seeMale = { cvf: 0.1362, vef1: 0.1284, vef1cvf: 0.04988, fef2575: 0.224, fef2575cvf: 0.2694 };
-        const seeFemale = { cvf: 0.1443, vef1: 0.1369, vef1cvf: 0.05075, fef2575: 0.2297, fef2575cvf: 0.2929 };
+        window.seeMale = { cvf: 0.1362, vef1: 0.1284, vef1cvf: 0.04988, fef2575: 0.224, fef2575cvf: 0.2694 };
+        window.seeFemale = { cvf: 0.1443, vef1: 0.1369, vef1cvf: 0.05075, fef2575: 0.2297, fef2575cvf: 0.2929 };
 
-        const calculatePredictedValues = (coefsPrev, lnHeight, lnAge, colorCode) => {
+        window.calculatePredictedValues = (coefsPrev, lnHeight, lnAge, colorCode) => {
             const lnPrevCVF = coefsPrev.intercept.cvf + (lnHeight * coefsPrev.lnAltura.cvf) + (lnAge * coefsPrev.lnIdade.cvf) + (colorCode * coefsPrev.cor.cvf);
             const prevCVF = Math.exp(lnPrevCVF);
             const lnPrevVEF1 = coefsPrev.intercept.vef1 + (lnHeight * coefsPrev.lnAltura.vef1) + (lnAge * coefsPrev.lnIdade.vef1) + (colorCode * coefsPrev.cor.vef1);
@@ -767,7 +776,7 @@
             return { prevCVF, prevVEF1, prevVEF1CVF, prevFEF2575, prevFEF2575CVF, lnPrevCVF, lnPrevVEF1, lnPrevFEF2575 };
         };
 
-        const calculateLINValues = (coefsLIN, lnHeight, lnAge, colorCode) => {
+        window.calculateLINValues = (coefsLIN, lnHeight, lnAge, colorCode) => {
             const lnLINCVF = coefsLIN.intercept.cvf + (lnHeight * coefsLIN.lnAltura.cvf) + (lnAge * coefsLIN.lnIdade.cvf) + (colorCode * coefsLIN.cor.cvf);
             const linCVF = Math.exp(lnLINCVF);
             const lnLINVEF1 = coefsLIN.intercept.vef1 + (lnHeight * coefsLIN.lnAltura.vef1) + (lnAge * coefsLIN.lnIdade.vef1) + (colorCode * coefsLIN.cor.vef1);
@@ -779,12 +788,12 @@
             return { linCVF, linVEF1, linVEF1CVF, linFEF2575, linFEF2575CVF };
         };
 
-        const computeDerivedObserved = (obsVEF1, obsCVF, obsFEF2575) => {
+        window.computeDerivedObserved = (obsVEF1, obsCVF, obsFEF2575) => {
             const computedObsVEF1CVF = (obsVEF1 !== null && obsCVF !== null && obsCVF !== 0) ? (obsVEF1 / obsCVF) : null;
             return { computedObsVEF1CVF };
         };
 
-        const calculateZScore = (obsVal, prevValRaw, seeVal, isLogTransformed) => {
+        window.calculateZScore = (obsVal, prevValRaw, seeVal, isLogTransformed) => {
             if (obsVal === null || isNaN(obsVal) || prevValRaw === null || isNaN(prevValRaw) || seeVal === 0 || isNaN(seeVal)) return null;
             let numerator;
             if (isLogTransformed) {
@@ -796,20 +805,20 @@
             return numerator / seeVal;
         };
 
-        const calculatePercentage = (observed, predicted) => {
+        window.calculatePercentage = (observed, predicted) => {
             if (observed === null || isNaN(observed) || predicted === null || isNaN(predicted) || predicted === 0) return 'N/A';
             return ((observed / predicted) * 100).toFixed(2);
         };
 
-        const calculateDiffPercentOfPredicted = (obsPre, obsPost, predicted) => {
+        window.calculateDiffPercentOfPredicted = (obsPre, obsPost, predicted) => {
             if (obsPre === null || obsPost === null || isNaN(obsPre) || isNaN(obsPost) || predicted === null || isNaN(predicted) || predicted === 0) return null;
             const absDiff = obsPost - obsPre;
             return (absDiff / predicted) * 100;
         };
 
-        const formatValue = (value, decimals = 2) => value === null || isNaN(value) ? 'N/A' : value.toFixed(decimals);
+        window.formatValue = (value, decimals = 2) => value === null || isNaN(value) ? 'N/A' : value.toFixed(decimals);
 
-        const generateSingleInterpretation = (obsCVF, linCVF, obsVEF1, linVEF1, computedObsVEF1CVF, linVEF1CVF, zScoreCVF, label, classPreBD = null, obsCVF_pre_param = null, obsVEF1_pre_param = null, prevCVF_param = null, prevVEF1_param = null) => {
+        window.generateSingleInterpretation = (obsCVF, linCVF, obsVEF1, linVEF1, computedObsVEF1CVF, linVEF1CVF, zScoreCVF, label, classPreBD = null, obsCVF_pre_param = null, obsVEF1_pre_param = null, prevCVF_param = null, prevVEF1_param = null) => {
             let baseInterpretationText = "";
             let calculatedClassification = "Sem Classificação";
 
@@ -823,17 +832,17 @@
                     calculatedClassification = "Normal";
                     baseInterpretationText = `Todos os parâmetros (CVF: ${formatValue(obsCVF)} L, VEF1: ${formatValue(obsVEF1)} L, VEF1/CVF: ${formatValue(computedObsVEF1CVF, 3)}) encontram-se dentro dos limites da normalidade. Função pulmonar normal.`;
                 } else if (isZScoreCVFValid && zScoreCVF >= 1 && isVEF1Valid && obsVEF1 > linVEF1 && computedObsVEF1CVF < linVEF1CVF) {
-                    calculatedClassification = "Considerar Disanapsis";
-                    baseInterpretationText = `CVF com Z-score >= 1 (Z-score CVF: ${formatValue(zScoreCVF, 2)}), VEF1 acima do LIN (${formatValue(obsVEF1)} L), mas a relação VEF1/CVF está reduzida (${formatValue(computedObsVEF1CVF, 3)}). Estes achados podem sugerir disanapsis (desproporção entre o tamanho das vias aéreas e o volume pulmonar). Recomenda-se correlação clínica.`;
+                    calculatedClassification = "Distúrbio Ventilatório Obstrutivo";
+                    baseInterpretationText = `Distúrbio Ventilatório Obstrutivo. CVF com Z-score >= 1 (Z-score CVF: ${formatValue(zScoreCVF, 2)}), VEF1 acima do LIN (${formatValue(obsVEF1)} L), mas a relação VEF1/CVF está reduzida (${formatValue(computedObsVEF1CVF, 3)}). Estes achados podem sugerir disanapsis (desproporção entre o tamanho das vias aéreas e o volume pulmonar). Recomenda-se correlação clínica.`;
                 } else if (obsCVF >= linCVF && computedObsVEF1CVF < linVEF1CVF) {
-                    calculatedClassification = "Obstrutivo";
-                    baseInterpretationText = `CVF encontra-se dentro da normalidade (${formatValue(obsCVF)} L), mas o índice VEF1/CVF está abaixo do LIN (${formatValue(computedObsVEF1CVF, 3)}). Isto é compatível com um padrão obstrutivo.`;
+                    calculatedClassification = "Distúrbio Ventilatório Obstrutivo";
+                    baseInterpretationText = `CVF encontra-se dentro da normalidade (${formatValue(obsCVF)} L), mas o índice VEF1/CVF está abaixo do LIN (${formatValue(computedObsVEF1CVF, 3)}). Isto é compatível com Distúrbio Ventilatório Obstrutivo.`;
                 } else if (obsCVF < linCVF && isVEF1Valid && obsVEF1 < linVEF1 && computedObsVEF1CVF >= linVEF1CVF) {
-                    calculatedClassification = "Restritivo";
-                    baseInterpretationText = `A Capacidade Vital Forçada (CVF: ${formatValue(obsCVF)} L) e o Volume Expiratório Forçado no primeiro segundo (VEF1: ${formatValue(obsVEF1)} L) estão abaixo do LIN, mas o índice VEF1/CVF (${formatValue(computedObsVEF1CVF, 3)}) está dentro da normalidade. Isto sugere um padrão restritivo.`;
+                    calculatedClassification = "Distúrbio Ventilatório Restritivo";
+                    baseInterpretationText = `A Capacidade Vital Forçada (CVF: ${formatValue(obsCVF)} L) e o Volume Expiratório Forçado no primeiro segundo (VEF1: ${formatValue(obsVEF1)} L) estão abaixo do LIN, mas o índice VEF1/CVF (${formatValue(computedObsVEF1CVF, 3)}) está dentro da normalidade. Isto sugere Distúrbio Ventilatório Restritivo.`;
                 } else if (obsCVF < linCVF && computedObsVEF1CVF < linVEF1CVF) {
-                    calculatedClassification = "Misto";
-                    baseInterpretationText = `Tanto o CVF (${formatValue(obsCVF)} L) quanto o índice VEF1/CVF (${formatValue(computedObsVEF1CVF, 3)}) estão abaixo do LIN. Isto indica um padrão misto (obstrutivo e restritivo).`;
+                    calculatedClassification = "Distúrbio Ventilatório Misto";
+                    baseInterpretationText = `Tanto o CVF (${formatValue(obsCVF)} L) quanto o índice VEF1/CVF (${formatValue(computedObsVEF1CVF, 3)}) estão abaixo do LIN. Isto indica Distúrbio Ventilatório Misto (obstrutivo e restritivo).`;
                 } else {
                     baseInterpretationText = "A combinação dos resultados não se enquadra claramente nos padrões definidos acima. Avaliação clínica detalhada é recomendada.";
                 }
@@ -881,7 +890,7 @@
                             cvfReversible = true;
                             cvfStatementForPush = `A CVF apresentou resposta significativa (${formatValue(varCVFPercPrev, 1)}% do previsto).`;
                             cvfStatementForPush += " Esta resposta na CVF sugere a presença de aprisionamento aéreo na fase pré-broncodilatador.";
-                            if (classPreBD === "Misto") {
+                            if (classPreBD === "Distúrbio Ventilatório Misto") {
                                 cvfStatementForPush += " Sendo o padrão Pré-BD classificado como Misto, esta melhora da CVF Pós-BD sugere redução do aprisionamento de ar.";
                             }
                         } else {
@@ -907,19 +916,17 @@
             };
         };
 
-        const generateConclusion = (preClassification, postClassification, vef1ChangePercent, cvfChangePercent) => {
+        window.generateConclusion = (preClassification, postClassification, vef1ChangePercent, cvfChangePercent) => {
             let conclusion = "";
 
             if (preClassification === "Normal") {
                 conclusion = "Espirometria dentro dos limites da normalidade.";
-            } else if (preClassification === "Obstrutivo") {
-                conclusion = "Distúrbio ventilatório obstrutivo.";
-            } else if (preClassification === "Restritivo") {
-                conclusion = "Distúrbio ventilatório restritivo.";
-            } else if (preClassification === "Misto") {
-                conclusion = "Distúrbio ventilatório misto (obstrutivo e restritivo).";
-            } else if (preClassification === "Considerar Disanapsis") {
-                conclusion = "Espirometria sugestiva de Disanapsis (desproporção via aérea/parênquima).";
+            } else if (preClassification === "Distúrbio Ventilatório Obstrutivo") {
+                conclusion = "Distúrbio Ventilatório Obstrutivo.";
+            } else if (preClassification === "Distúrbio Ventilatório Restritivo") {
+                conclusion = "Distúrbio Ventilatório Restritivo.";
+            } else if (preClassification === "Distúrbio Ventilatório Misto") {
+                conclusion = "Distúrbio Ventilatório Misto (obstrutivo e restritivo).";
             } else {
                 conclusion = "Alterações ventilatórias inespecíficas.";
             }
@@ -944,63 +951,93 @@
 
             return conclusion;
         };
+    </script>
+    <script>
 
-        // --- renderer.js content ---
+        // Imports removed for non-module usage
+        // Functions are now loaded globally from calculations.js
 
         let spirometryChart = null;
-        let currentExamId = null; // Defined globally for Auto-Save
+        let currentExamId = null;
 
-        // Auto-Save Function
+        const generateNewId = (doctorName) => {
+            if (!doctorName) return Date.now().toString(); // Fallback
+
+            // Extract initials: "Marcus H Jones" -> "MHJ"
+            const initials = doctorName.trim().split(/\s+/).map(n => n[0].toUpperCase()).join('');
+
+            const database = JSON.parse(localStorage.getItem('spiroDatabase') || '[]');
+            let maxNum = 0;
+
+            // Pattern to match: INITIALS + 4 digits (e.g., MHJ0001)
+            // We escape initials just in case they contain special regex chars
+            const escapedInitials = initials.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const pattern = new RegExp(`^${escapedInitials}(\\d{4})$`);
+
+            database.forEach(exam => {
+                if (exam.id) {
+                    const match = exam.id.match(pattern);
+                    if (match) {
+                        const num = parseInt(match[1], 10);
+                        if (num > maxNum) maxNum = num;
+                    }
+                }
+            });
+
+            const nextNum = maxNum + 1;
+            return `${initials}${String(nextNum).padStart(4, '0')}`;
+        };
+
         const autoSaveExam = () => {
-            const getVal = (id) => document.getElementById(id).value;
-            // No need for getNum here as we store strings for CSV
+            const patientName = document.getElementById('patientName').value.trim();
+            const examDate = document.getElementById('examDate').value;
+            const doctorName = document.getElementById('doctorName').value.trim();
+
+            if (!patientName || !examDate) return; // Don't save incomplete records
+
+            // Generate ID only if it's a new exam
+            if (!currentExamId) {
+                currentExamId = generateNewId(doctorName);
+            }
 
             const examData = {
-                id: currentExamId || Date.now(), // Use existing ID or create new one
-                timestamp: new Date().toISOString(),
-                patientName: getVal('patientName'),
-                examDate: getVal('examDate'),
-                ageYears: getVal('ageYears'),
-                ageMonths: getVal('ageMonths'),
-                heightCm: getVal('heightCm'),
-                weightKg: getVal('weightKg'),
-                gender: getVal('gender'),
-                colorCode: getVal('colorCode'),
-                diagnosis: getVal('diagnosis'),
-                doctorName: getVal('doctorName'),
-                doctorCRM: getVal('doctorCRM'),
-                clinicName: getVal('clinicName'),
-                // Pre-BD
-                obsCVF_pre: getVal('obsCVF_pre'),
-                obsVEF1_pre: getVal('obsVEF1_pre'),
-                obsFEF2575_pre: getVal('obsFEF2575_pre'),
-                // Post-BD
-                obsCVF_post: getVal('obsCVF_post'),
-                obsVEF1_post: getVal('obsVEF1_post'),
-                obsFEF2575_post: getVal('obsFEF2575_post'),
-                // Interpretation
-                conclusion: getVal('conclusion-text')
+                id: currentExamId,
+                patientName,
+                examDate,
+                doctorName,
+                doctorCRM: document.getElementById('doctorCRM').value,
+                doctorSpecialty: document.getElementById('doctorSpecialty').value,
+                clinicName: document.getElementById('clinicName').value,
+                ageYears: parseFloat(document.getElementById('ageYears').value),
+                ageMonths: parseFloat(document.getElementById('ageMonths').value),
+                heightCm: parseFloat(document.getElementById('heightCm').value),
+                weightKg: parseFloat(document.getElementById('weightKg').value),
+                gender: document.getElementById('gender').value,
+                colorCode: parseFloat(document.getElementById('colorCode').value),
+                diagnosis: document.getElementById('diagnosis').value,
+                obsCVF_pre: parseFloat(document.getElementById('obsCVF_pre').value) || null,
+                obsVEF1_pre: parseFloat(document.getElementById('obsVEF1_pre').value) || null,
+                obsFEF2575_pre: parseFloat(document.getElementById('obsFEF2575_pre').value) || null,
+                obsCVF_post: parseFloat(document.getElementById('obsCVF_post').value) || null,
+                obsVEF1_post: parseFloat(document.getElementById('obsVEF1_post').value) || null,
+                obsFEF2575_post: parseFloat(document.getElementById('obsFEF2575_post').value) || null,
+                timestamp: new Date().toISOString()
             };
 
             let database = JSON.parse(localStorage.getItem('spiroDatabase') || '[]');
 
             if (currentExamId) {
-                // Update existing record
+                // Update existing or add new (since we just set currentExamId)
                 const index = database.findIndex(item => item.id === currentExamId);
                 if (index !== -1) {
                     database[index] = examData;
                 } else {
-                    // Should not happen, but fallback to push
                     database.push(examData);
                 }
-            } else {
-                // New record
-                currentExamId = examData.id;
-                database.push(examData);
             }
 
             localStorage.setItem('spiroDatabase', JSON.stringify(database));
-            // Optional: console.log('Auto-saved exam:', currentExamId);
+            console.log('Exame salvo automaticamente:', currentExamId);
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1112,6 +1149,16 @@
                     postBdColumn.style.display = 'block';
                 }
             });
+
+            // Chart Visibility Toggle
+            const chartCheckbox = document.getElementById('showChartCheckbox');
+            const chartContainer = document.getElementById('chartContainer');
+
+            if (chartCheckbox && chartContainer) {
+                chartCheckbox.addEventListener('change', function () {
+                    chartContainer.style.display = this.checked ? 'block' : 'none';
+                });
+            }
         });
 
         document.getElementById('doctorName').addEventListener('input', (e) => localStorage.setItem('doctorName', e.target.value));
@@ -1192,8 +1239,7 @@
 
             // Calculations
             const totalAgeInYears = ageYears + (ageMonths / 12);
-            const lnAge = Math.log(totalAgeInYears);
-            const lnHeight = Math.log(heightCm);
+
 
             // Special logic for Healthy Patients >= 13
             if (diagnosis === "Sadio e Assintomático" && totalAgeInYears >= 13) {
@@ -1216,7 +1262,8 @@
                 document.getElementById('results').style.display = 'block';
                 document.getElementById('spirometryForm').style.display = 'none';
 
-                autoSaveExam();
+                autoSaveExam(); // Auto-save for healthy patients
+
                 return; // Exit function
             }
 
@@ -1224,7 +1271,11 @@
             document.querySelector('#results table').style.display = 'table';
             document.querySelector('#results h2').style.display = 'block';
             document.querySelector('.citation').style.display = 'block';
-            document.querySelector('.chart-container').style.display = 'block';
+
+            // Respect checkbox state
+            const showChart = document.getElementById('showChartCheckbox').checked;
+            document.getElementById('chartContainer').style.display = showChart ? 'block' : 'none';
+
             document.getElementById('interpretation-unified-section').style.display = 'block';
             document.getElementById('printButton').style.display = 'inline-block';
             document.getElementById('copyHtmlButton').style.display = 'inline-block';
@@ -1236,6 +1287,9 @@
             const currentCoefsPrev = gender === 'male' ? coefMalePrev : coefFemalePrev;
             const currentCoefsLIN = gender === 'male' ? coefMaleLIN : coefFemaleLIN;
             const currentSEE = gender === 'male' ? seeMale : seeFemale;
+
+            const lnHeight = Math.log(heightCm);
+            const lnAge = Math.log(totalAgeInYears);
 
             const { prevCVF, prevVEF1, prevVEF1CVF, prevFEF2575 } = calculatePredictedValues(currentCoefsPrev, lnHeight, lnAge, colorCode);
             const { linCVF, linVEF1, linVEF1CVF, linFEF2575 } = calculateLINValues(currentCoefsLIN, lnHeight, lnAge, colorCode);
@@ -1278,6 +1332,7 @@
             addRow('FEF25-75% (L/s)', obsFEF2575_pre, prevFEF2575, linFEF2575, zScoreFEF2575_pre);
 
             // Render Post Table (Conditional)
+            // For Healthy patients, we never show Post-BD results (as they don't do it)
             const hasPostBDValues = diagnosis !== "Sadio e Assintomático" && (obsCVF_post !== null || obsVEF1_post !== null || obsFEF2575_post !== null);
             const postSection = document.getElementById('postBdSection');
 
@@ -1325,7 +1380,7 @@
 
             // Interpretation
             const preBDResult = generateSingleInterpretation(obsCVF_pre, linCVF, obsVEF1_pre, linVEF1, computedObsVEF1CVF_pre, linVEF1CVF, zScoreCVF_pre, "Pré-Broncodilatador");
-            document.getElementById('interpretation-text-pre').value = preBDResult.text.replace(/<br>/g, '\n').replace(/<strong>|<\/strong>/g, '');
+            document.getElementById('interpretation-text-pre').value = preBDResult.text.replace(/<br>/g, '\n').replace(/<strong>|<\/strong>/g, ''); // Strip HTML for textarea
             const preBDClassification = preBDResult.classification;
 
             const postBDInterpretationArea = document.getElementById('interpretation-text-post');
@@ -1447,11 +1502,11 @@
                 document.getElementById('sendHealthyButton').style.display = 'none';
             }
 
-            // Auto-save
-            autoSaveExam();
+            autoSaveExam(); // Auto-save after calculation
         });
 
         document.getElementById('resetButton').addEventListener('click', function () {
+            currentExamId = null; // Reset current exam ID for new exam
             document.getElementById('spirometryForm').reset();
 
             // Restore saved values immediately after reset
@@ -1476,9 +1531,6 @@
             document.getElementById('spirometryForm').style.display = 'block';
             document.getElementById('ageRangeWarning').style.display = 'none';
             document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
-
-            // Reset current exam ID for new session
-            currentExamId = null;
         });
 
         document.getElementById('printButton').addEventListener('click', function () {
@@ -1528,71 +1580,6 @@
                 document.body.removeChild(clone);
             }
         });
-
-        const exportDatabase = () => {
-            const database = JSON.parse(localStorage.getItem('spiroDatabase') || '[]');
-            if (database.length === 0) {
-                alert('Não há exames salvos para exportar.');
-                return;
-            }
-
-            // CSV Header
-            const headers = [
-                'ID', 'Data/Hora Salvamento', 'Nome Paciente', 'Data Exame', 'Idade (Anos)', 'Idade (Meses)', 'Altura (cm)', 'Peso (Kg)', 'Sexo', 'Cor', 'Diagnóstico',
-                'Médico', 'CRM', 'Clínica',
-                'CVF Pré (L)', 'VEF1 Pré (L)', 'FEF25-75 Pré (L/s)',
-                'CVF Pós (L)', 'VEF1 Pós (L)', 'FEF25-75 Pós (L/s)',
-                'Conclusão'
-            ];
-
-            // CSV Rows
-            const rows = database.map(exam => [
-                exam.id,
-                exam.timestamp,
-                `"${exam.patientName}"`, // Quote strings that might have commas
-                exam.examDate,
-                exam.ageYears,
-                exam.ageMonths,
-                exam.heightCm,
-                exam.weightKg || '',
-                exam.gender,
-                exam.colorCode,
-                `"${exam.diagnosis || ''}"`,
-                `"${exam.doctorName}"`,
-                `"${exam.doctorCRM}"`,
-                `"${exam.clinicName}"`,
-                exam.obsCVF_pre,
-                exam.obsVEF1_pre,
-                exam.obsFEF2575_pre,
-                exam.obsCVF_post,
-                exam.obsVEF1_post,
-                exam.obsFEF2575_post,
-                `"${(exam.conclusion || '').replace(/"/g, '""').replace(/\n/g, ' ')}"` // Escape quotes and newlines
-            ]);
-
-            const csvContent = [
-                headers.join(','),
-                ...rows.map(row => row.join(','))
-            ].join('\n');
-
-            // Create Download Link
-            // Add BOM (\uFEFF) to ensure Excel opens UTF-8 correctly
-            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.setAttribute('href', url);
-
-            const doctorName = document.getElementById('doctorName').value.trim() || 'Medico';
-            const safeDoctorName = doctorName.replace(/[^a-zA-Z0-9_-\s]/g, '').replace(/\s+/g, '_');
-            link.setAttribute('download', `data-backup-${safeDoctorName}.csv`);
-
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        };
-
-        document.getElementById('exportDbButton').addEventListener('click', exportDatabase);
 
         const exportHealthyDatabase = () => {
             const database = JSON.parse(localStorage.getItem('spiroDatabase') || '[]');
@@ -1669,8 +1656,86 @@
             alert('O arquivo CSV foi baixado. Por favor, anexe-o ao e-mail que será aberto em seguida.');
         };
 
-        document.getElementById('sendHealthyButton').addEventListener('click', sendHealthyEmail);
+        const exportDatabase = () => {
+            const database = JSON.parse(localStorage.getItem('spiroDatabase') || '[]');
 
+            if (database.length === 0) {
+                alert('O banco de dados está vazio.');
+                return;
+            }
+
+            // CSV Header
+            const headers = [
+                'ID', 'Nome do Paciente', 'Data Nasc/Idade', 'Data Exame', 'Sexo', 'Cor', 'Altura (cm)', 'Peso (Kg)',
+                'Diagnóstico', 'Médico', 'CRM', 'Clínica',
+                'CVF Pré (L)', 'VEF1 Pré (L)', 'FEF25-75 Pré (L/s)',
+                'CVF Pós (L)', 'VEF1 Pós (L)', 'FEF25-75 Pós (L/s)'
+            ];
+
+            // CSV Rows
+            const rows = database.map(exam => [
+                exam.id,
+                `"${exam.patientName}"`,
+                exam.ageYears + 'a ' + exam.ageMonths + 'm',
+                exam.examDate,
+                exam.gender,
+                exam.colorCode === 0 ? 'Branco' : 'Negro/Pardo',
+                exam.heightCm,
+                exam.weightKg,
+                `"${exam.diagnosis}"`,
+                `"${exam.doctorName}"`,
+                `"${exam.doctorCRM}"`,
+                `"${exam.clinicName}"`,
+                exam.obsCVF_pre,
+                exam.obsVEF1_pre,
+                exam.obsFEF2575_pre,
+                exam.obsCVF_post,
+                exam.obsVEF1_post,
+                exam.obsFEF2575_post
+            ]);
+
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.join(','))
+            ].join('\n');
+
+            // Create Download Link
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+
+            const doctorName = document.getElementById('doctorName').value.trim() || 'Medico';
+            const doctorCRM = document.getElementById('doctorCRM').value.trim() || 'CRM';
+            const safeDoctorName = doctorName.replace(/[^a-zA-Z0-9_-\s]/g, '').replace(/\s+/g, '_');
+            const safeCRM = doctorCRM.replace(/[^a-zA-Z0-9_-\s]/g, '');
+
+            const filename = `SpiroDB_${safeDoctorName}_${safeCRM}.csv`;
+            link.setAttribute('download', filename);
+
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        const saveExam = () => {
+            const patientName = document.getElementById('patientName').value.trim();
+            const examDate = document.getElementById('examDate').value;
+
+            if (!patientName || !examDate) {
+                alert('Por favor, preencha pelo menos o Nome do Paciente e a Data do Exame.');
+                return;
+            }
+
+            // Reuse the logic from autoSaveExam but with user feedback
+            autoSaveExam();
+            alert(`Exame de ${patientName} salvo com sucesso!`);
+        };
+
+        document.getElementById('saveExamButton').addEventListener('click', saveExam);
+        document.getElementById('exportDbButton').addEventListener('click', exportDatabase);
+        document.getElementById('sendHealthyButton').addEventListener('click', sendHealthyEmail);
     </script>
 </body>
 

@@ -99,17 +99,17 @@ window.generateSingleInterpretation = (obsCVF, linCVF, obsVEF1, linVEF1, compute
             calculatedClassification = "Normal";
             baseInterpretationText = `Todos os parâmetros (CVF: ${formatValue(obsCVF)} L, VEF1: ${formatValue(obsVEF1)} L, VEF1/CVF: ${formatValue(computedObsVEF1CVF, 3)}) encontram-se dentro dos limites da normalidade. Função pulmonar normal.`;
         } else if (isZScoreCVFValid && zScoreCVF >= 1 && isVEF1Valid && obsVEF1 > linVEF1 && computedObsVEF1CVF < linVEF1CVF) {
-            calculatedClassification = "Considerar Disanapsis";
-            baseInterpretationText = `CVF com Z-score >= 1 (Z-score CVF: ${formatValue(zScoreCVF, 2)}), VEF1 acima do LIN (${formatValue(obsVEF1)} L), mas a relação VEF1/CVF está reduzida (${formatValue(computedObsVEF1CVF, 3)}). Estes achados podem sugerir disanapsis (desproporção entre o tamanho das vias aéreas e o volume pulmonar). Recomenda-se correlação clínica.`;
+            calculatedClassification = "Distúrbio Ventilatório Obstrutivo";
+            baseInterpretationText = `Distúrbio Ventilatório Obstrutivo. CVF com Z-score >= 1 (Z-score CVF: ${formatValue(zScoreCVF, 2)}), VEF1 acima do LIN (${formatValue(obsVEF1)} L), mas a relação VEF1/CVF está reduzida (${formatValue(computedObsVEF1CVF, 3)}). Estes achados podem sugerir disanapsis (desproporção entre o tamanho das vias aéreas e o volume pulmonar). Recomenda-se correlação clínica.`;
         } else if (obsCVF >= linCVF && computedObsVEF1CVF < linVEF1CVF) {
-            calculatedClassification = "Obstrutivo";
-            baseInterpretationText = `CVF encontra-se dentro da normalidade (${formatValue(obsCVF)} L), mas o índice VEF1/CVF está abaixo do LIN (${formatValue(computedObsVEF1CVF, 3)}). Isto é compatível com um padrão obstrutivo.`;
+            calculatedClassification = "Distúrbio Ventilatório Obstrutivo";
+            baseInterpretationText = `CVF encontra-se dentro da normalidade (${formatValue(obsCVF)} L), mas o índice VEF1/CVF está abaixo do LIN (${formatValue(computedObsVEF1CVF, 3)}). Isto é compatível com Distúrbio Ventilatório Obstrutivo.`;
         } else if (obsCVF < linCVF && isVEF1Valid && obsVEF1 < linVEF1 && computedObsVEF1CVF >= linVEF1CVF) {
-            calculatedClassification = "Restritivo";
-            baseInterpretationText = `A Capacidade Vital Forçada (CVF: ${formatValue(obsCVF)} L) e o Volume Expiratório Forçado no primeiro segundo (VEF1: ${formatValue(obsVEF1)} L) estão abaixo do LIN, mas o índice VEF1/CVF (${formatValue(computedObsVEF1CVF, 3)}) está dentro da normalidade. Isto sugere um padrão restritivo.`;
+            calculatedClassification = "Distúrbio Ventilatório Restritivo";
+            baseInterpretationText = `A Capacidade Vital Forçada (CVF: ${formatValue(obsCVF)} L) e o Volume Expiratório Forçado no primeiro segundo (VEF1: ${formatValue(obsVEF1)} L) estão abaixo do LIN, mas o índice VEF1/CVF (${formatValue(computedObsVEF1CVF, 3)}) está dentro da normalidade. Isto sugere Distúrbio Ventilatório Restritivo.`;
         } else if (obsCVF < linCVF && computedObsVEF1CVF < linVEF1CVF) {
-            calculatedClassification = "Misto";
-            baseInterpretationText = `Tanto o CVF (${formatValue(obsCVF)} L) quanto o índice VEF1/CVF (${formatValue(computedObsVEF1CVF, 3)}) estão abaixo do LIN. Isto indica um padrão misto (obstrutivo e restritivo).`;
+            calculatedClassification = "Distúrbio Ventilatório Misto";
+            baseInterpretationText = `Tanto o CVF (${formatValue(obsCVF)} L) quanto o índice VEF1/CVF (${formatValue(computedObsVEF1CVF, 3)}) estão abaixo do LIN. Isto indica Distúrbio Ventilatório Misto (obstrutivo e restritivo).`;
         } else {
             baseInterpretationText = "A combinação dos resultados não se enquadra claramente nos padrões definidos acima. Avaliação clínica detalhada é recomendada.";
         }
@@ -157,7 +157,7 @@ window.generateSingleInterpretation = (obsCVF, linCVF, obsVEF1, linVEF1, compute
                     cvfReversible = true;
                     cvfStatementForPush = `A CVF apresentou resposta significativa (${formatValue(varCVFPercPrev, 1)}% do previsto).`;
                     cvfStatementForPush += " Esta resposta na CVF sugere a presença de aprisionamento aéreo na fase pré-broncodilatador.";
-                    if (classPreBD === "Misto") {
+                    if (classPreBD === "Distúrbio Ventilatório Misto") {
                         cvfStatementForPush += " Sendo o padrão Pré-BD classificado como Misto, esta melhora da CVF Pós-BD sugere redução do aprisionamento de ar.";
                     }
                 } else {
@@ -188,14 +188,12 @@ window.generateConclusion = (preClassification, postClassification, vef1ChangePe
 
     if (preClassification === "Normal") {
         conclusion = "Espirometria dentro dos limites da normalidade.";
-    } else if (preClassification === "Obstrutivo") {
-        conclusion = "Distúrbio ventilatório obstrutivo.";
-    } else if (preClassification === "Restritivo") {
-        conclusion = "Distúrbio ventilatório restritivo.";
-    } else if (preClassification === "Misto") {
-        conclusion = "Distúrbio ventilatório misto (obstrutivo e restritivo).";
-    } else if (preClassification === "Considerar Disanapsis") {
-        conclusion = "Espirometria sugestiva de Disanapsis (desproporção via aérea/parênquima).";
+    } else if (preClassification === "Distúrbio Ventilatório Obstrutivo") {
+        conclusion = "Distúrbio Ventilatório Obstrutivo.";
+    } else if (preClassification === "Distúrbio Ventilatório Restritivo") {
+        conclusion = "Distúrbio Ventilatório Restritivo.";
+    } else if (preClassification === "Distúrbio Ventilatório Misto") {
+        conclusion = "Distúrbio Ventilatório Misto (obstrutivo e restritivo).";
     } else {
         conclusion = "Alterações ventilatórias inespecíficas.";
     }

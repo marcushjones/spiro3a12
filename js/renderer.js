@@ -4,17 +4,51 @@
 let spirometryChart = null;
 let currentExamId = null;
 
+const generateNewId = (doctorName) => {
+    if (!doctorName) return Date.now().toString(); // Fallback
+
+    // Extract initials: "Marcus H Jones" -> "MHJ"
+    const initials = doctorName.trim().split(/\s+/).map(n => n[0].toUpperCase()).join('');
+
+    const database = JSON.parse(localStorage.getItem('spiroDatabase') || '[]');
+    let maxNum = 0;
+
+    // Pattern to match: INITIALS + 4 digits (e.g., MHJ0001)
+    // We escape initials just in case they contain special regex chars
+    const escapedInitials = initials.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = new RegExp(`^${escapedInitials}(\\d{4})$`);
+
+    database.forEach(exam => {
+        if (exam.id) {
+            const match = exam.id.match(pattern);
+            if (match) {
+                const num = parseInt(match[1], 10);
+                if (num > maxNum) maxNum = num;
+            }
+        }
+    });
+
+    const nextNum = maxNum + 1;
+    return `${initials}${String(nextNum).padStart(4, '0')}`;
+};
+
 const autoSaveExam = () => {
     const patientName = document.getElementById('patientName').value.trim();
     const examDate = document.getElementById('examDate').value;
+    const doctorName = document.getElementById('doctorName').value.trim();
 
     if (!patientName || !examDate) return; // Don't save incomplete records
 
+    // Generate ID only if it's a new exam
+    if (!currentExamId) {
+        currentExamId = generateNewId(doctorName);
+    }
+
     const examData = {
-        id: currentExamId || Date.now().toString(),
+        id: currentExamId,
         patientName,
         examDate,
-        doctorName: document.getElementById('doctorName').value,
+        doctorName,
         doctorCRM: document.getElementById('doctorCRM').value,
         doctorSpecialty: document.getElementById('doctorSpecialty').value,
         clinicName: document.getElementById('clinicName').value,
@@ -37,17 +71,13 @@ const autoSaveExam = () => {
     let database = JSON.parse(localStorage.getItem('spiroDatabase') || '[]');
 
     if (currentExamId) {
-        // Update existing
+        // Update existing or add new (since we just set currentExamId)
         const index = database.findIndex(item => item.id === currentExamId);
         if (index !== -1) {
             database[index] = examData;
         } else {
             database.push(examData);
         }
-    } else {
-        // Create new
-        currentExamId = examData.id;
-        database.push(examData);
     }
 
     localStorage.setItem('spiroDatabase', JSON.stringify(database));
@@ -733,5 +763,20 @@ const exportDatabase = () => {
     document.body.removeChild(link);
 };
 
+const saveExam = () => {
+    const patientName = document.getElementById('patientName').value.trim();
+    const examDate = document.getElementById('examDate').value;
+
+    if (!patientName || !examDate) {
+        alert('Por favor, preencha pelo menos o Nome do Paciente e a Data do Exame.');
+        return;
+    }
+
+    // Reuse the logic from autoSaveExam but with user feedback
+    autoSaveExam();
+    alert(`Exame de ${patientName} salvo com sucesso!`);
+};
+
+document.getElementById('saveExamButton').addEventListener('click', saveExam);
 document.getElementById('exportDbButton').addEventListener('click', exportDatabase);
 document.getElementById('sendHealthyButton').addEventListener('click', sendHealthyEmail);

@@ -304,18 +304,18 @@
         .action-buttons-group {
             margin-top: 40px;
             display: flex;
-            gap: 15px;
+            gap: 10px;
             justify-content: center;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
         }
 
         .action-buttons-group button {
             width: auto;
             flex-grow: 1;
-            max-width: 200px;
             margin-top: 0;
-            font-size: 1em;
-            padding: 12px 20px;
+            font-size: 0.9em;
+            padding: 10px 15px;
+            white-space: nowrap;
         }
 
         #resetButton {
@@ -682,7 +682,7 @@
 
             <div class="input-group" style="margin-bottom: 10px;">
                 <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                    <input type="checkbox" id="showChartCheckbox" checked style="width: auto; margin: 0;">
+                    <input type="checkbox" id="showChartCheckbox" style="width: auto; margin: 0;">
                     Visualizar Gráfico
                 </label>
             </div>
@@ -711,20 +711,22 @@
             </div>
 
             <div class="action-buttons-group">
+                <button type="button" id="saveExamButton" class="action-button"
+                    style="background-color: #2563eb; color: white;">Salvar Exame</button>
                 <button type="button" id="exportDbButton" class="action-button"
-                    style="background-color: #4CAF50; color: white;">Exportar Banco de Dados (CSV)</button>
+                    style="background-color: #4CAF50; color: white;">Exportar CSV</button>
+                <button type="button" id="printButton" style="background-color: #0ea5e9;">Imprimir</button>
+                <button type="button" id="copyHtmlButton" style="background-color: #10b981;">Copiar</button>
+                <button type="button" id="resetButton" style="background-color: #64748b;">Novo</button>
                 <button type="button" id="sendHealthyButton" class="action-button"
-                    style="background-color: #8e44ad; color: white; display: none;">Enviar Dados (Sadios)</button>
-                <button type="button" id="printButton">Imprimir (PDF)</button>
-                <button type="button" id="copyHtmlButton">Copiar Resultados (HTML)</button>
-                <button type="button" id="resetButton">Novo Exame</button>
+                    style="background-color: #8e44ad; color: white; display: none;">Enviar Sadios</button>
             </div>
 
             <div class="author-license-info">
                 <p>Desenvolvido por <a href="mailto:marcushjones@gmail.com?subject=Feedback%20Spiro3a12">Marcus H
                         Jones</a>
                 </p>
-                <p class="license-small">Versão 1.19 | CC BY-ND 4.0</p>
+                <p class="license-small">Versão 1.20 | CC BY-ND 4.0</p>
             </div>
         </div>
     </div>
